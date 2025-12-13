@@ -5,7 +5,11 @@ import hashlib
 from dotenv import load_dotenv
 
 load_dotenv()
+from kafka import KafkaProducer
 
+producer = KafkaProducer(
+    bootstrap_servers='kafka:9092',
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
 # --- CONFIG ---
 APP_ID = os.getenv("CLIENT_ID_SOLARMAN")
 APP_SECRET = os.getenv("CLIENT_SECRET_SOLARMAN")
@@ -144,6 +148,9 @@ if __name__ == "__main__":
         if data_real_time:
             print("\n📊 Datos en tiempo real:")
             print(json.dumps(data_real_time, indent=2))
+            producer.send('topic_solarman_data', data_real_time)
+            producer.flush()
+            print("✅ Datos enviados a Kafka correctamente.")
         else:
             print("⚠️ No se pudieron descargar los datos en tiempo real.")
     else:
