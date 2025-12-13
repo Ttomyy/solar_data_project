@@ -9,7 +9,8 @@ from kafka import KafkaProducer
 
 producer = KafkaProducer(
     bootstrap_servers='kafka:9092',
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+    api_version=(2, 0, 2))
 # --- CONFIG ---
 APP_ID = os.getenv("CLIENT_ID_SOLARMAN")
 APP_SECRET = os.getenv("CLIENT_SECRET_SOLARMAN")
