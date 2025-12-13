@@ -131,28 +131,33 @@ def get_real_time_data(token, station_id):
 
     
 if __name__ == "__main__":
-    token = get_access_token()
+    while True:
+        token = get_access_token()
+        
+        if token:
+            print(f"✅ Token obtenido. Longitud: {len(token)}")
 
-    if token:
-        print(f"✅ Token obtenido. Longitud: {len(token)}")
+            # Nuevo paso:
+            stations_data = get_station_list(token)
 
-        # Nuevo paso:
-        stations_data = get_station_list(token)
-
-        if stations_data:
-            print("\n🏠 Estaciones encontradas:")
-            print(json.dumps(stations_data, indent=2))
+            if stations_data:
+                print("\n🏠 Estaciones encontradas:")
+                print(json.dumps(stations_data, indent=2))
+            else:
+                print("⚠️ No se pudieron descargar las estaciones.")
+                
+            data_real_time = get_real_time_data(token, stations_data['stationList'][0]['id'])
+            if data_real_time:
+                print("\n📊 Datos en tiempo real:")
+                print(json.dumps(data_real_time, indent=2))
+                producer.send('topic_solarman_data', data_real_time)
+                producer.flush()
+                print("✅ Datos enviados a Kafka correctamente.")
+            else:
+                print("⚠️ No se pudieron descargar los datos en tiempo real.")
         else:
-            print("⚠️ No se pudieron descargar las estaciones.")
-            
-        data_real_time = get_real_time_data(token, stations_data['stationList'][0]['id'])
-        if data_real_time:
-            print("\n📊 Datos en tiempo real:")
-            print(json.dumps(data_real_time, indent=2))
-            producer.send('topic_solarman_data', data_real_time)
-            producer.flush()
-            print("✅ Datos enviados a Kafka correctamente.")
-        else:
-            print("⚠️ No se pudieron descargar los datos en tiempo real.")
-    else:
-        print("❌ Fallo en la autenticación.")
+            print("❌ Fallo en la autenticación.")
+    
+        print("⏱️ Esperando 4 minutos para la siguiente consulta...\n")
+        import time
+        time.sleep(2)  # Esperar 10 minutos antes de la siguiente consulta
