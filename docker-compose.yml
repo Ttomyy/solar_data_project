@@ -48,6 +48,7 @@ services:
       - kafka
       - mongo
     environment:
+      - PYTHONUNBUFFERED=1  # <--- ¡Esta es la línea mágica! 🪄
       - MONGO_USER=${MONGO_USER}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
       - MONGO_HOST=mongo

@@ -12,15 +12,22 @@ MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@mongo:27017/"
 clientMongo = MongoClient(MONGO_URI)
 db = clientMongo["solar_data"]
 collection = db["real_time_data"]
+consumer = None
+while consumer is None:
+    try:
+        consumer = KafkaConsumer(
+            'topic_solarman_data',
+            bootstrap_servers='kafka:9092',  # <--- Asegúrate que pone 'kafka', NO 'localhost'
+            auto_offset_reset='earliest',
+            value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+        )
+        print("✅ ¡Conexión con Kafka exitosa!")
+    except Exception as e:
+        print(f"⚠️ Kafka no responde aún: {e}")
+        print("🔁 Reintentando en 5 segundos...")
+        time.sleep(5)
 
-consumer = KafkaConsumer(
-    'topic_solarman_data',
-    bootstrap_servers='kafka:9092',
-    auto_offset_reset='earliest',
-    value_deserializer=lambda x: json.loads(x.decode('utf-8'))
-)
 
-print("🛠️ ETL to MongoDB iniciado. Esperando mensajes de Kafka...")
 for message in consumer:
     data = message.value
     print(f"📥 Mensaje recibido de Kafka: {data}")

@@ -160,4 +160,4 @@ if __name__ == "__main__":
     
         print("⏱️ Esperando 4 minutos para la siguiente consulta...\n")
         import time
-        time.sleep(2)  # Esperar 10 minutos antes de la siguiente consulta
+        time.sleep(180)  # Esperar 10 minutos antes de la siguiente consulta
