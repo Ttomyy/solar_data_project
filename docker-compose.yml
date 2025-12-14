@@ -37,8 +37,41 @@ services:
       - PASSWORD_SOLARMAN=${PASSWORD_SOLARMAN}
     networks:
       - solar_network
+  # Servicio ETL para mover datos de Kafka a MongoDB
+  etl_to_mongo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: etl_to_mongo
+    command: python src/etl_to_mongo.py
+    depends_on:
+      - kafka
+      - mongo
+    environment:
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+    networks:
+      - solar_network
+
+  # Servicio de base de datos MongoDB
+  mongo:
+    image: mongo:latest
+    container_name: solar_mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - solar_network
 volumes:
   kafka_data:
+    driver: local
+  mongo_data:
     driver: local
 
 networks:
