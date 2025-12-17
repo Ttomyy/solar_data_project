@@ -127,7 +127,30 @@ def get_real_time_data(token, station_id):
         print(f"❌ Error al buscar datos en tiempo real: {e}")
         # ... resto del manejo de respuesta ...
         
+#******************************************************************************
+#***********************encriptacion de datos SHA256***********************
+def hash_sensitive_data(station_data):
+    """
+    Crea una copia de los datos y encripta los campos sensibles.
+    """
+    # 1. Hacemos una copia para no modificar el diccionario original por accidente
+    secure_data = station_data.copy()
+    
+    # 2. Lista de campos que queremos proteger
+    sensitive_keys = ['name', 'locationAddress']
+    
+    for key in sensitive_keys:
+        # Solo encriptamos si la clave existe en el diccionario
+        if key in secure_data:
+            valor_original = str(secure_data[key])
+            # Convertimos a hash SHA-256 (irreversible)
+            hash_object = hashlib.sha256(valor_original.encode())
+            secure_data[key] = hash_object.hexdigest()
+            
+    return secure_data
 
+
+#********************************************************************************
 
     
 if __name__ == "__main__":
@@ -141,13 +164,33 @@ if __name__ == "__main__":
             stations_data = get_station_list(token)
 
             if stations_data:
-                print("\n🏠 Estaciones encontradas:")
-                print(json.dumps(stations_data, indent=2))
+             # Suponiendo que stations_data tiene una lista 'stationList'
+             # Procesamos la primera estación (o podrías hacer un bucle si tienes varias)
+                original_station = stations_data['stationList'][0]
+             
+             # 🔒 Aquí ocurre la magia: Creamos la versión segura
+                secure_station = hash_sensitive_data(original_station)
+
+                print("\n🏠 Estación encontrada (Datos Protegidos):")
+             # Imprimimos la versión segura (verás los hash en vez de tu dirección)
+                print(json.dumps(secure_station, indent=2)) 
+             
+             # Enviamos la versión segura al nuevo topic estático
+                producer.send('topic_solarman_static_data', secure_station) 
+                producer.flush()
+                print("✅ Estaciones enviadas a Kafka correctamente.")
             else:
                 print("⚠️ No se pudieron descargar las estaciones.")
+            
+            # Obtenemos el ID que ya conocemos de la lista
+            el_id_de_mi_estacion = stations_data['stationList'][0]['id']
                 
             data_real_time = get_real_time_data(token, stations_data['stationList'][0]['id'])
             if data_real_time:
+                # Inyectamos el ID dentro de los datos de tiempo real
+                # Así el ETL sabrá de quién son estos datos
+                data_real_time['stationId'] = el_id_de_mi_estacion
+                
                 print("\n📊 Datos en tiempo real:")
                 print(json.dumps(data_real_time, indent=2))
                 producer.send('topic_solarman_data', data_real_time)

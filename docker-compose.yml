@@ -35,6 +35,7 @@ services:
       - CLIENT_SECRET_SOLARMAN=${CLIENT_SECRET_SOLARMAN}
       - EMAIL_SOLARMAN=${EMAIL_SOLARMAN}
       - PASSWORD_SOLARMAN=${PASSWORD_SOLARMAN}
+      - PYTHONUNBUFFERED=1  # <--- ¡Añade esto!      
     networks:
       - solar_network
   # Servicio ETL para mover datos de Kafka a MongoDB
@@ -69,11 +70,53 @@ services:
       - mongo_data:/data/db
     networks:
       - solar_network
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      # Instalamos el plugin de comunidad para MongoDB al arrancar
+      - GF_INSTALL_PLUGINS=grafana-mongodb-datasource
+      # Usuario y contraseña por defecto (cámbialo si expones esto a internet)
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      # Esto guarda tus paneles para que no se borren al reiniciar
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - mongo
+    networks:
+      - solar_network  # Asegúrate de usar el mismo nombre de red que los otros servicios
+
+  # 1. El espía que saca datos de Kafka
+  kafka-exporter:
+    image: danielqsj/kafka-exporter
+    command: ["--kafka.server=kafka:9092"]
+    ports:
+      - "9308:9308"
+    depends_on:
+      - kafka
+    networks:
+      - solar_network
+
+  # 2. La base de datos de métricas
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - solar_network
+  
+
 volumes:
   kafka_data:
     driver: local
   mongo_data:
     driver: local
+  grafana_data:
 
 networks:
   solar_network:
