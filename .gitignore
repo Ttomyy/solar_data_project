@@ -1,1 +1,25 @@
-*.env
+# --- SECRETOS (LO MÁS IMPORTANTE) ---
+.env
+
+# --- PYTHON ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+
+# --- DATOS DE DOCKER (¡CRÍTICO! NO SUBIR BB.DD.) ---
+# Estos nombres deben coincidir con las carpetas que se crean en tu PC
+mongo_data/
+influxdb_data/
+grafana_data/
+
+# --- IDEs (Configuraciones de tu editor) ---
+.vscode/
+.idea/
+
+# --- SISTEMA OPERATIVO ---
+.DS_Store
+Thumbs.db
