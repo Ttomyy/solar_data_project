@@ -88,10 +88,41 @@ services:
       - mongo
     networks:
       - solar_network  # Asegúrate de usar el mismo nombre de red que los otros servicios
-
+  etl_to_influx:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "src/etl_to_influx.py"]
+    depends_on:
+      - kafka
+      - influxdb
+    environment:
+      - INFLUX_TOKEN=${INFLUX_TOKEN}
+      - INFLUX_ORG=${INFLUX_ORG}
+      - INFLUX_BUCKET=${INFLUX_BUCKET}
+    networks:
+      - solar_network
+      
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASS}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_TOKEN}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - solar_network
   # 1. El espía que saca datos de Kafka
   kafka-exporter:
     image: danielqsj/kafka-exporter
+    container_name: kafka-exporter
     command: ["--kafka.server=kafka:9092"]
     ports:
       - "9308:9308"
@@ -103,8 +134,10 @@ services:
   # 2. La base de datos de métricas
   prometheus:
     image: prom/prometheus
+    container_name: prometheus
     ports:
       - "9090:9090"
+    
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
@@ -117,6 +150,8 @@ volumes:
   mongo_data:
     driver: local
   grafana_data:
+
+  influxdb_data:
 
 networks:
   solar_network:

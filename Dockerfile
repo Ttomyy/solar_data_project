@@ -13,3 +13,4 @@ COPY . .
 
 # 5. Comando para ejecutar tu script (ajusta la ruta si es necesario)
 CMD ["python", "src/fetch_solarman_data.py"]
+
