@@ -143,6 +143,31 @@ services:
     networks:
       - solar_network
   
+  # Orquestador N8n
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+    #image: n8nio/n8n
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${GRAFANA_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${GRAFANA_PASSWORD}
+      - DATABRICKS_HOSTNAME=${DATABRICKS_HOSTNAME}
+      - DATABRICKS_HTTP_PATH=${DATABRICKS_HTTP_PATH}
+      - DATABRICKS_TOKEN=${DATABRICKS_TOKEN}
+      # REUTILIZAMOS MONGO PARA EL SCRIPT:
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Importante: Le damos acceso a tus scripts de python
+      - .:/home/node/app
+    networks:
+      - solar_network
 
 volumes:
   kafka_data:
@@ -150,6 +175,8 @@ volumes:
   mongo_data:
     driver: local
   grafana_data:
+
+  n8n_data:
 
   influxdb_data:
 

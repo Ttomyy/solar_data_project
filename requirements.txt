@@ -7,3 +7,5 @@ urllib3==2.6.1
 kafka-python
 pymongo
 influxdb-client
+databricks-sql-connector
+pandas
